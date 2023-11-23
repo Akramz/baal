@@ -220,9 +220,9 @@ class BaalTrainer(Trainer):
 
         if len(pool_dataloader) > 0:
             # TODO Add support for max_samples in pool_dataloader
-            probs = self.predict_on_dataset_generator(
-                model=model, dataloader=pool_dataloader, **self.kwargs
-            )
+            
+            probs = self.predict_on_dataset_generator(model=model, dataloader=pool_dataloader, **self.kwargs)
+            if isinstance(self.heuristic, heuristics.BatchBALD): probs = list(probs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if len(to_label) > 0:
