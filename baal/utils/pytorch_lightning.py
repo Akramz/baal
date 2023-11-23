@@ -26,28 +26,6 @@ warnings.warn(
     DeprecationWarning,
 )
 
-
-# class BaaLDataModule(LightningDataModule):
-#     def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1, **kwargs):
-#         super().__init__(**kwargs)
-#         self.active_dataset = active_dataset
-#         self.batch_size = batch_size
-
-#     def pool_dataloader(self) -> DataLoader:
-#         """Create Dataloader for the pool of unlabelled examples."""
-#         return DataLoader(
-#             self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False
-#         )
-
-#     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-#         if "active_dataset" in checkpoint:
-#             self.active_dataset.load_state_dict(checkpoint["active_dataset"])
-#         else:
-#             log.warning("'active_dataset' not in checkpoint!")
-
-#     def on_save_checkpoint(self, checkpoint: Dict[str, Any]):
-#         checkpoint["active_dataset"] = self.active_dataset.state_dict()
-
 class BaaLDataModule(LightningDataModule):
     def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1, **kwargs):
         super().__init__(**kwargs)
@@ -220,9 +198,7 @@ class BaalTrainer(Trainer):
 
         if len(pool_dataloader) > 0:
             # TODO Add support for max_samples in pool_dataloader
-            
             probs = self.predict_on_dataset_generator(model=model, dataloader=pool_dataloader, **self.kwargs)
-            if isinstance(self.heuristic, heuristics.BatchBALD): probs = list(probs)
             if probs is not None and (isinstance(probs, types.GeneratorType) or len(probs) > 0):
                 to_label = self.heuristic(probs)
                 if len(to_label) > 0:
