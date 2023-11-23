@@ -27,6 +27,27 @@ warnings.warn(
 )
 
 
+# class BaaLDataModule(LightningDataModule):
+#     def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1, **kwargs):
+#         super().__init__(**kwargs)
+#         self.active_dataset = active_dataset
+#         self.batch_size = batch_size
+
+#     def pool_dataloader(self) -> DataLoader:
+#         """Create Dataloader for the pool of unlabelled examples."""
+#         return DataLoader(
+#             self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False
+#         )
+
+#     def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
+#         if "active_dataset" in checkpoint:
+#             self.active_dataset.load_state_dict(checkpoint["active_dataset"])
+#         else:
+#             log.warning("'active_dataset' not in checkpoint!")
+
+#     def on_save_checkpoint(self, checkpoint: Dict[str, Any]):
+#         checkpoint["active_dataset"] = self.active_dataset.state_dict()
+
 class BaaLDataModule(LightningDataModule):
     def __init__(self, active_dataset: ActiveLearningDataset, batch_size=1, **kwargs):
         super().__init__(**kwargs)
@@ -39,14 +60,16 @@ class BaaLDataModule(LightningDataModule):
             self.active_dataset.pool, batch_size=self.batch_size, num_workers=4, shuffle=False
         )
 
-    def on_load_checkpoint(self, checkpoint: Dict[str, Any]) -> None:
-        if "active_dataset" in checkpoint:
-            self.active_dataset.load_state_dict(checkpoint["active_dataset"])
+    def state_dict(self) -> Dict[str, Any]:
+        """Returns the state of the module as a dictionary."""
+        return {"active_dataset": self.active_dataset.state_dict()}
+
+    def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
+        """Loads the module's state from the provided dictionary."""
+        if "active_dataset" in state_dict:
+            self.active_dataset.load_state_dict(state_dict["active_dataset"])
         else:
             log.warning("'active_dataset' not in checkpoint!")
-
-    def on_save_checkpoint(self, checkpoint: Dict[str, Any]):
-        checkpoint["active_dataset"] = self.active_dataset.state_dict()
 
 
 class ActiveLightningModule(LightningModule):
